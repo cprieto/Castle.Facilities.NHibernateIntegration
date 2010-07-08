@@ -21,7 +21,7 @@ using Configuration = NHibernate.Cfg.Configuration;
 
 namespace Castle.Facilities.NHibernateIntegration.Tests.Internals
 {
-	public class CustomConfigurationBuilder : IConfigurationBuilder
+	/*public class CustomConfigurationBuilder : IConfigurationBuilder
 	{
 		private int _configurationsCreated;
 
@@ -91,5 +91,5 @@ namespace Castle.Facilities.NHibernateIntegration.Tests.Internals
 		{
 			get { return "configurationBuilderRegression.xml"; }
 		}
-	}
+	}*/
 }

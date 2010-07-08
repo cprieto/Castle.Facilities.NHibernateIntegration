@@ -180,6 +180,7 @@
     <Compile Include="Common\TestInterceptor.cs" />
     <Compile Include="Components\NHibernateGenericDaoTestCase.cs" />
     <Compile Include="Components\ReflectionUtilityTests.cs" />
+    <Compile Include="Fluent\FluentTests.cs" />
     <Compile Include="Internals\ConfigurationBuilderTestCase.cs" />
     <Compile Include="Internals\CustomConfigurationBuilderTestCase.cs" />
     <Compile Include="Internals\SessionManagerTestCase.cs">

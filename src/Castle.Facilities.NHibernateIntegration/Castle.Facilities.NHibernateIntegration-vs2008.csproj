@@ -156,6 +156,14 @@
     <Compile Include="Components\Web\SessionWebModule.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Fluent\Impl\BasicConfigurationBuilderConfiguration.cs" />
+    <Compile Include="Fluent\Impl\FactoryConfiguration.cs" />
+    <Compile Include="Fluent\Impl\NHFacilityConfigurationImpl.cs" />
+    <Compile Include="Fluent\Interfaces\IConfigurationBuilderConfiguration.cs" />
+    <Compile Include="Fluent\Interfaces\IFactoryConfiguration.cs" />
+    <Compile Include="Fluent\Interfaces\INHFacilityConfiguration.cs" />
+    <Compile Include="Fluent\NHFacilityConfiguration.cs" />
+    <Compile Include="Fluent\NHFacilityRegistration.cs" />
     <Compile Include="Util\FieldInfoCollection.cs">
       <SubType>Code</SubType>
     </Compile>

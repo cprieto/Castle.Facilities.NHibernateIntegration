@@ -19,6 +19,7 @@ namespace Castle.Facilities.NHibernateIntegration
 	using Builders;
 	using Castle.Core.Configuration;
 	using Castle.MicroKernel.Facilities;
+	using Castle.MicroKernel.Registration;
 	using Castle.MicroKernel.SubSystems.Conversion;
 	using Castle.Services.Transaction;
 	using Castle.Core;
@@ -69,8 +70,10 @@ namespace Castle.Facilities.NHibernateIntegration
 	/// </example>
 	public class NHibernateFacility : AbstractFacility
 	{
-		private const string DefaultConfigurationBuilderKey = "nhfacility.configuration.builder";
-		private const string ConfigurationBuilderConfigurationKey = "configurationBuilder";
+		internal const string DefaultConfigurationBuilderKey = "nhfacility.configuration.builder";
+		internal const string ConfigurationBuilderKeyConfigurationKey = "configurationBuilderKey";
+		internal const string ConfigurationBuilderTypeConfigurationKey = "configurationBuilderType";
+		internal const string ConfigurationBuilderIdFormat = "{0}.configurationBuilder";
 		private const string SessionFactoryResolverKey = "nhfacility.sessionfactory.resolver";
 		private const string SessionInterceptorKey = "nhibernate.sessionfactory.interceptor";
 		private const string IsWebConfigurationKey = "isWeb";
@@ -81,26 +84,16 @@ namespace Castle.Facilities.NHibernateIntegration
 		private const string SessionFactoryIdConfigurationKey = "id";
 		private const string SessionFactoryAliasConfigurationKey = "alias";
 		private const string SessionStoreKey = "nhfacility.sessionstore";
-		private const string ConfigurationBuilderForFactoryFormat = "{0}.configurationBuilder";
 
-
-		private readonly IConfigurationBuilder configurationBuilder;
+		private string defaultConfigurationBuilderKey;
 
 		private ILogger log = NullLogger.Instance;
 
-		/// <summary>
-		/// Instantiates the facility with the specified configuration builder.
-		/// </summary>
-		/// <param name="configurationBuilder"></param>
-		public NHibernateFacility(IConfigurationBuilder configurationBuilder)
-		{
-			this.configurationBuilder = configurationBuilder;
-		}
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="NHibernateFacility"/> class.
 		/// </summary>
-		public NHibernateFacility() : this(new DefaultConfigurationBuilder())
+		public NHibernateFacility()
 		{
 		}
 
@@ -141,11 +134,17 @@ namespace Castle.Facilities.NHibernateIntegration
 		/// </summary>
 		private void RegisterDefaultConfigurationBuilder()
 		{
-			string defaultConfigurationBuilder = FacilityConfig.Attributes[ConfigurationBuilderConfigurationKey];
-			if (!string.IsNullOrEmpty(defaultConfigurationBuilder))
-				Kernel.AddComponent(DefaultConfigurationBuilderKey, typeof(IConfigurationBuilder), Type.GetType(defaultConfigurationBuilder));
-			else
-				Kernel.AddComponentInstance(DefaultConfigurationBuilderKey, typeof(IConfigurationBuilder),this.configurationBuilder);
+
+			string defaultBuilderKey = FacilityConfig.Attributes[ConfigurationBuilderKeyConfigurationKey];
+			if(string.IsNullOrEmpty(defaultBuilderKey))
+			{
+				defaultBuilderKey = NHibernateFacility.DefaultConfigurationBuilderKey;
+				Kernel.Register(Component
+				                	.For<IConfigurationBuilder>()
+				                	.ImplementedBy<DefaultConfigurationBuilder>()
+									.Named(defaultBuilderKey));
+			}
+			defaultConfigurationBuilderKey = defaultBuilderKey;
 		}
 
 
@@ -318,24 +317,22 @@ namespace Castle.Facilities.NHibernateIntegration
 				throw new ConfigurationErrorsException(message);
 			}
 			else if (string.IsNullOrEmpty(alias))
-			{
+
 				alias = Constants.DefaultAlias;
-			}
-			string configurationBuilderType = config.Attributes[ConfigurationBuilderConfigurationKey];
-			string configurationbuilderKey = string.Format(ConfigurationBuilderForFactoryFormat, id);
-			IConfigurationBuilder configurationBuilder;
-			if (string.IsNullOrEmpty(configurationBuilderType))
+
+			string configurationBuilderKey = config.Attributes[ConfigurationBuilderKeyConfigurationKey];
+			string configurationBuilderType = config.Attributes[ConfigurationBuilderTypeConfigurationKey];
+
+			if(string.IsNullOrEmpty(configurationBuilderKey) &&!string.IsNullOrEmpty(configurationBuilderType))
 			{
-				configurationBuilder = Kernel.Resolve<IConfigurationBuilder>();
+				configurationBuilderKey = string.Format(ConfigurationBuilderIdFormat, id);
+				Kernel.Register(Component.For<IConfigurationBuilder>().ImplementedBy(Type.GetType(configurationBuilderType)).Named(configurationBuilderKey));
 			}
-			else
-			{
-				Kernel.AddComponent(configurationbuilderKey,
-				                    typeof (IConfigurationBuilder),
-				                    Type.GetType(configurationBuilderType));
-				configurationBuilder = Kernel.Resolve<IConfigurationBuilder>(configurationbuilderKey);
-			}
-			
+			else if(string.IsNullOrEmpty(configurationBuilderKey) && string.IsNullOrEmpty(configurationBuilderType))
+				configurationBuilderKey = defaultConfigurationBuilderKey;
+
+			var configurationBuilder = Kernel.Resolve<IConfigurationBuilder>(configurationBuilderKey);
+
 			var cfg = configurationBuilder.GetConfiguration(config);
 
 			// Registers the Configuration object
